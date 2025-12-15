@@ -1,0 +1,5 @@
+{
+  "name": "CIDCO Record Manager",
+  "description": "A React-based dashboard for managing PFEPL / CIDCO plot records, visualizing data, and administering users.",
+  "requestFramePermissions": []
+}
