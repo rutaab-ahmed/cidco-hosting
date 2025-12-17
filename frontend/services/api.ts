@@ -1,6 +1,7 @@
 import { PlotRecord, SummaryData, User } from '../types';
 
-const API_BASE = 'http://localhost:8083/api';
+// const API_BASE = 'http://localhost:8083/api';
+const API_BASE = import.meta.env.VITE_API_URL;
 
 export const ApiService = {
   // --- Auth ---
