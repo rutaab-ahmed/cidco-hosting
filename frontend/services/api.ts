@@ -133,7 +133,7 @@ export const ApiService = {
   // },
   async updateRecord(id: string, data: any) {
     try {
-      const res = await fetch(`http://localhost:8083/api/record/${id}`, 
+      const res = await fetch(`https://cidco-backend.onrender.com/api/record/${id}`, 
         {method: "PUT",
         headers: {
           "Content-Type": "application/json",
