@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
         allowedHosts:["sleepier-undeparted-audrie.ngrok-free.dev"],
       },
       plugins: [react()],
-        build: {outDir: 'dist',}
+      build: {outDir: 'dist'},
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
         'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
