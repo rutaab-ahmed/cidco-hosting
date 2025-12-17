@@ -241,6 +241,11 @@ app.get("/api/summary/department", async (req, res) => {
   res.json(await getSummary(req, "Department_Remark"));
 });
 
+
+app.get('/', (req, res) => {
+  res.send('Backend is running');
+});
+
 /* ================= UPDATE RECORD ================= */
 
 // app.put("/api/record/:id", async (req, res) => {
