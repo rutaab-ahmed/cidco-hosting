@@ -446,6 +446,7 @@ app.put("/api/record/:id", async (req, res) => {
 //   console.log("🚀 Server running on http://localhost:8083")
 // );
 
-const PORT = process.env.PORT || 8083;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
 
