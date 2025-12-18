@@ -229,7 +229,7 @@ async function getSummary(req, column) {
       SUM(NULLIF(REGEXP_REPLACE("Additional_Plot_Count",'[^0-9.]','','g'),'')::NUMERIC) AS additional_count
     FROM all_data
     WHERE 1=1
-    GROUP BY TRIM("${column}")
+    GROUP BY category
   `;
 
   const params = [];
