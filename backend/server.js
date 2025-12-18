@@ -169,6 +169,9 @@ app.post("/api/search", async (req, res) => {
 
 /* ================= RECORD DETAILS ================= */
 
+const MEDIA_BASE = "https://sleepier-undeparted-audrie.ngrok-free.dev";
+// example: https://media.cidco.xyz
+
 app.get("/api/record/:id", async (req, res) => {
   const result = await pool.query(
     `SELECT * FROM all_data WHERE "ID" = $1`,
@@ -181,18 +184,38 @@ app.get("/api/record/:id", async (req, res) => {
   const record = result.rows[0];
   const id = String(record.ID);
 
-  const imgDir = path.join(UPLOADS_PATH, "images", id);
-  const images = fs.existsSync(imgDir)
-    ? fs.readdirSync(imgDir).map(f => `/uploads/images/${id}/${f}`)
-    : [];
-
   res.json({
     ...record,
-    images,
-    has_pdf: fs.existsSync(path.join(UPLOADS_PATH, "pdfs", `${id}.pdf`)),
-    has_map: fs.existsSync(path.join(UPLOADS_PATH, "maps", `${id}.pdf`))
+    images_url: `${MEDIA_BASE}/images/${id}/`,
+    pdf_url: `${MEDIA_BASE}/pdfs/${id}.pdf`
   });
 });
+
+
+// app.get("/api/record/:id", async (req, res) => {
+//   const result = await pool.query(
+//     `SELECT * FROM all_data WHERE "ID" = $1`,
+//     [req.params.id]
+//   );
+
+//   if (!result.rows.length)
+//     return res.status(404).json({ error: "Not found" });
+
+//   const record = result.rows[0];
+//   const id = String(record.ID);
+
+//   const imgDir = path.join(UPLOADS_PATH, "images", id);
+//   const images = fs.existsSync(imgDir)
+//     ? fs.readdirSync(imgDir).map(f => `/uploads/images/${id}/${f}`)
+//     : [];
+
+//   res.json({
+//     ...record,
+//     images,
+//     has_pdf: fs.existsSync(path.join(UPLOADS_PATH, "pdfs", `${id}.pdf`)),
+//     has_map: fs.existsSync(path.join(UPLOADS_PATH, "maps", `${id}.pdf`))
+//   });
+// });
 
 /* ================= SUMMARY ================= */
 
