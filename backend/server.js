@@ -217,6 +217,8 @@ app.get("/api/record/:id", async (req, res) => {
 //   });
 // });
 
+// /* ================= SUMMARY ================= */
+
 /* ================= SUMMARY ================= */
 
 async function getSummary(req, column) {
@@ -224,23 +226,45 @@ async function getSummary(req, column) {
 
   let sql = `
     SELECT
-      COALESCE(TRIM("${column}", 'Unknown')) AS category,
-      SUM(NULLIF(REGEXP_REPLACE("PLOT_AREA_FOR_INVOICE",'[^0-9.]','','g'),'')::NUMERIC) AS area,
-      SUM(NULLIF(REGEXP_REPLACE("Additional_Plot_Count",'[^0-9.]','','g'),'')::NUMERIC) AS additional_count
+      COALESCE(TRIM("${column}"), 'Unknown') AS category,
+      SUM(
+        NULLIF(
+          REGEXP_REPLACE("PLOT_AREA_FOR_INVOICE",'[^0-9.]','','g'),
+          ''
+        )::NUMERIC
+      ) AS area,
+      SUM(
+        NULLIF(
+          REGEXP_REPLACE("Additional_Plot_Count",'[^0-9.]','','g'),
+          ''
+        )::NUMERIC
+      ) AS additional_count
     FROM all_data
     WHERE 1=1
-    GROUP BY category
   `;
 
   const params = [];
   let i = 1;
 
-  if (node)   { sql += ` AND "NAME_OF_NODE" = $${i++}`; params.push(node); }
-  if (sector) { sql += ` AND "SECTOR_NO_" = $${i++}`; params.push(sector); }
+  if (node) {
+    sql += ` AND TRIM("NAME_OF_NODE") = $${i++}`;
+    params.push(node);
+  }
+
+  if (sector) {
+    sql += ` AND TRIM("SECTOR_NO_") = $${i++}`;
+    params.push(sector);
+  }
 
   sql += `
-    GROUP BY category
-    HAVING SUM(NULLIF(REGEXP_REPLACE("PLOT_AREA_FOR_INVOICE",'[^0-9.]','','g'),'')::NUMERIC) > 0
+    GROUP BY TRIM("${column}")
+    HAVING
+      SUM(
+        NULLIF(
+          REGEXP_REPLACE("PLOT_AREA_FOR_INVOICE",'[^0-9.]','','g'),
+          ''
+        )::NUMERIC
+      ) > 0
     ORDER BY category
   `;
 
@@ -253,7 +277,9 @@ async function getSummary(req, column) {
     category: r.category,
     area: Number(r.area || 0),
     additionalCount: Number(r.additional_count || 0),
-    percent: total ? Number(((r.area / total) * 100).toFixed(2)) : 0
+    percent: total
+      ? Number(((r.area / total) * 100).toFixed(2))
+      : 0
   }));
 }
 
@@ -265,10 +291,61 @@ app.get("/api/summary/department", async (req, res) => {
   res.json(await getSummary(req, "Department_Remark"));
 });
 
-
 app.get('/', (req, res) => {
   res.send('Backend is running');
 });
+
+
+// async function getSummary(req, column) {
+//   const { node, sector } = req.query;
+
+//   let sql = `
+//     SELECT
+//       COALESCE(TRIM("${column}", 'Unknown')) AS category,
+//       SUM(NULLIF(REGEXP_REPLACE("PLOT_AREA_FOR_INVOICE",'[^0-9.]','','g'),'')::NUMERIC) AS area,
+//       SUM(NULLIF(REGEXP_REPLACE("Additional_Plot_Count",'[^0-9.]','','g'),'')::NUMERIC) AS additional_count
+//     FROM all_data
+//     WHERE 1=1
+//     GROUP BY category
+//   `;
+
+//   const params = [];
+//   let i = 1;
+
+//   if (node)   { sql += ` AND "NAME_OF_NODE" = $${i++}`; params.push(node); }
+//   if (sector) { sql += ` AND "SECTOR_NO_" = $${i++}`; params.push(sector); }
+
+//   sql += `
+//     GROUP BY category
+//     HAVING SUM(NULLIF(REGEXP_REPLACE("PLOT_AREA_FOR_INVOICE",'[^0-9.]','','g'),'')::NUMERIC) > 0
+//     ORDER BY category
+//   `;
+
+//   const result = await pool.query(sql, params);
+//   const rows = result.rows;
+
+//   const total = rows.reduce((a, r) => a + Number(r.area || 0), 0);
+
+//   return rows.map(r => ({
+//     category: r.category,
+//     area: Number(r.area || 0),
+//     additionalCount: Number(r.additional_count || 0),
+//     percent: total ? Number(((r.area / total) * 100).toFixed(2)) : 0
+//   }));
+// }
+
+// app.get("/api/summary", async (req, res) => {
+//   res.json(await getSummary(req, "PLOT_USE_FOR_INVOICE"));
+// });
+
+// app.get("/api/summary/department", async (req, res) => {
+//   res.json(await getSummary(req, "Department_Remark"));
+// });
+
+
+// app.get('/', (req, res) => {
+//   res.send('Backend is running');
+// });
 
 /* ================= UPDATE RECORD ================= */
 
