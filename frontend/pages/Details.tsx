@@ -31,7 +31,7 @@ export const Details: React.FC = () => {
   const openFile = (type: 'pdf' | 'map') => {
     if (!record) return;
     const folder = type === 'pdf' ? 'pdfs' : 'maps';
-    const url = `http://localhost:8083/uploads/${folder}/${record.ID}.pdf`;
+    const url = ` https://sleepier-undeparted-audrie.ngrok-free.dev/uploads/${folder}/${record.ID}.pdf`;
     window.open(url, '_blank');
   };
 
