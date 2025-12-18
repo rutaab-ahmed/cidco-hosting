@@ -224,7 +224,7 @@ async function getSummary(req, column) {
 
    let sql = `
      SELECT
-       COALESCE(TRIM("${column}", 'Unknown')) AS category,
+       COALESCE("${column}", 'Unknown') AS category,
        SUM(NULLIF(REGEXP_REPLACE("PLOT_AREA_FOR_INVOICE",'[^0-9.]','','g'),'')::NUMERIC) AS area,
        SUM(NULLIF(REGEXP_REPLACE("Additional_Plot_Count",'[^0-9.]','','g'),'')::NUMERIC) AS additional_count
      FROM all_data
