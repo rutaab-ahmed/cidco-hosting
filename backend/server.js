@@ -247,7 +247,7 @@ async function getSummary(req, groupByColumn) {
         additionalCount: parseFloat(r.additional_count) || 0,
         percent: totalArea > 0 ? parseFloat(((r.area / totalArea) * 100).toFixed(2)) : 0
     }));
-}
+};
 
  app.get("/api/summary", async (req, res) => {
    res.json(await getSummary(req, "PLOT_USE_FOR_INVOICE"));
@@ -256,7 +256,6 @@ async function getSummary(req, groupByColumn) {
  app.get("/api/summary/department", async (req, res) => {
    res.json(await getSummary(req, "Department_Remark"));
  });
-
 
  app.get('/', (req, res) => {
    res.send('Backend is running');
