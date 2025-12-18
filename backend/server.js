@@ -218,25 +218,59 @@ app.get("/api/record/:id", async (req, res) => {
 // });
 
 // 9. Summary (Generic Helper) - PostgreSQL version
+// async function getSummary(req, groupByColumn) {
+//     const { node, sector } = req.query;
+//     // Clean PLOT_AREA_FOR_INVOICE and Additional_Plot_Count to valid numbers
+//     let sql = `
+//         SELECT 
+//             COALESCE(${groupByColumn}, 'Unknown') AS category,
+//             SUM(CAST(NULLIF(regexp_replace(PLOT_AREA_FOR_INVOICE, '[^0-9.]', '', 'g'), '') AS numeric(15,2))) AS area,
+//             SUM(CAST(NULLIF(regexp_replace(Additional_Plot_Count, '[^0-9.]', '', 'g'), '') AS numeric(15,2))) AS additional_count
+//         FROM all_data WHERE 1=1
+//     `;
+//     const params = [];
+//     if (node) { sql += ` AND NAME_OF_NODE = $1`; params.push(node); }
+//     if (sector) { sql += ` AND SECTOR_NO_ = $2`; params.push(sector); }
+    
+//     // Group and basic order (specific sorting happens in frontend)
+//     sql += `
+//     GROUP BY category HAVING area > 0 ORDER BY category ASC`;
+
+//     const rows = await query(sql, params);
+    
+//     // Calculate totals for percentage
+//     const totalArea = rows.reduce((acc, curr) => acc + (parseFloat(curr.area) || 0), 0);
+    
+//     return rows.map(r => ({
+//         category: r.category,
+//         area: parseFloat(r.area) || 0,
+//         additionalCount: parseFloat(r.additional_count) || 0,
+//         percent: totalArea > 0 ? parseFloat(((r.area / totalArea) * 100).toFixed(2)) : 0
+//     }));
+// };
+
 async function getSummary(req, groupByColumn) {
     const { node, sector } = req.query;
-    // Clean PLOT_AREA_FOR_INVOICE and Additional_Plot_Count to valid numbers
-    let sql = `
-        SELECT 
-            COALESCE(${groupByColumn}, 'Unknown') AS category,
-            SUM(CAST(NULLIF(regexp_replace(PLOT_AREA_FOR_INVOICE, '[^0-9.]', '', 'g'), '') AS numeric(15,2))) AS area,
-            SUM(CAST(NULLIF(regexp_replace(Additional_Plot_Count, '[^0-9.]', '', 'g'), '') AS numeric(15,2))) AS additional_count
-        FROM all_data WHERE 1=1
-    `;
-    const params = [];
-    if (node) { sql += ` AND NAME_OF_NODE = $1`; params.push(node); }
-    if (sector) { sql += ` AND SECTOR_NO_ = $2`; params.push(sector); }
+    // We clean PLOT_AREA_FOR_INVOICE to ensure valid numbers, similarly for Additional_Plot_Count if it's string based
+    let sql = 'COALESCE (${groupByColumn}, 'Unknown') AS categoty, SUM(NULLIF(RECEXP_REPLACE(PLOT_AREA_FOR_INVOICE,  '[^0-9.]', '', 'g'), '')::NUMERIC) AS area )';
+    // `
+    //     SELECT 
+    //         IFNULL(${groupByColumn}, 'Unknown') AS category,
+    //         SUM(CAST(NULLIF(REGEXP_REPLACE(PLOT_AREA_FOR_INVOICE, '[^0-9.]', ''), '') AS DECIMAL(15,2))) AS area,
+    //         SUM(CAST(NULLIF(REGEXP_REPLACE(Additional_Plot_Count, '[^0-9.]', ''), '') AS DECIMAL(15,2))) AS additional_count
+    //     FROM all_data WHERE 1=1
+    // `;
+    // const params = [];
+    if (node) { sql += " AND NAME_OF_NODE = $${paramIndex++}"; params.push(node); }
+    if (sector) { sql += " AND SECTOR_NO_ = $${paramIndex++}"; params.push(sector); }
     
     // Group and basic order (specific sorting happens in frontend)
-    sql += `
-    GROUP BY category HAVING area > 0 ORDER BY category ASC`;
+    sql += " GROUP BY category HAVING area > 0 ORDER BY category ASC";
 
-    const rows = await query(sql, params);
+    // const rows = await pool.query(sql, params);
+    // const rows = result.rows;
+    const result = await pool.query(sql, params);
+    const rows = result.rows || [];
     
     // Calculate totals for percentage
     const totalArea = rows.reduce((acc, curr) => acc + (parseFloat(curr.area) || 0), 0);
@@ -247,7 +281,7 @@ async function getSummary(req, groupByColumn) {
         additionalCount: parseFloat(r.additional_count) || 0,
         percent: totalArea > 0 ? parseFloat(((r.area / totalArea) * 100).toFixed(2)) : 0
     }));
-};
+}
 
  app.get("/api/summary", async (req, res) => {
    res.json(await getSummary(req, "PLOT_USE_FOR_INVOICE"));
