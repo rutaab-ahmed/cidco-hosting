@@ -249,7 +249,18 @@ async function getSummary(req, groupByColumn) {
     }));
 }
 
+ app.get("/api/summary", async (req, res) => {
+   res.json(await getSummary(req, "PLOT_USE_FOR_INVOICE"));
+ });
 
+ app.get("/api/summary/department", async (req, res) => {
+   res.json(await getSummary(req, "Department_Remark"));
+ });
+
+
+ app.get('/', (req, res) => {
+   res.send('Backend is running');
+ });
 
 /* ================= UPDATE RECORD ================= */
 
