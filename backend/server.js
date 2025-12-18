@@ -229,11 +229,12 @@ async function getSummary(req, groupByColumn) {
         FROM all_data WHERE 1=1
     `;
     const params = [];
-    if (node) { sql += " AND NAME_OF_NODE = $1"; params.push(node); }
-    if (sector) { sql += " AND SECTOR_NO_ = $2"; params.push(sector); }
+    if (node) { sql += ` AND NAME_OF_NODE = $1`; params.push(node); }
+    if (sector) { sql += ` AND SECTOR_NO_ = $2`; params.push(sector); }
     
     // Group and basic order (specific sorting happens in frontend)
-    sql += " GROUP BY category HAVING area > 0 ORDER BY category ASC";
+    sql += `
+    GROUP BY category HAVING area > 0 ORDER BY category ASC`;
 
     const rows = await query(sql, params);
     
