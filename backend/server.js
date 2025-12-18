@@ -186,7 +186,7 @@ app.get("/api/record/:id", async (req, res) => {
 
   res.json({
     ...record,
-    images_url: `${MEDIA_BASE}/images/${id}/`,
+    images_url: `${MEDIA_BASE}/api/images/${id}/`,
     pdf_url: `${MEDIA_BASE}/pdfs/${id}.pdf`
   });
 });
