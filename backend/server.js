@@ -229,7 +229,7 @@ async function getSummary(req, column) {
        SUM(NULLIF(REGEXP_REPLACE("Additional_Plot_Count",'[^0-9.]','','g'),'')::NUMERIC) AS additional_count
      FROM all_data
      WHERE 1=1
-     GROUP BY category
+     GROUP BY ("${column}")
    `;
 
    const params = [];
@@ -239,9 +239,9 @@ async function getSummary(req, column) {
    if (sector) { sql += ` AND "SECTOR_NO_" = $${i++}`; params.push(sector); }
 
    sql += `
-     GROUP BY category
+     GROUP BY GROUP BY ("${column}")
      HAVING SUM(NULLIF(REGEXP_REPLACE("PLOT_AREA_FOR_INVOICE",'[^0-9.]','','g'),'')::NUMERIC) > 0
-     ORDER BY category
+     ORDER BY GROUP BY ("${column}")
    `;
 
    const result = await pool.query(sql, params);
