@@ -227,7 +227,7 @@ app.post('/api/search', async (req, res) => {
     const { node, sector, block, plot } = req.body;
 
     let sql = `
-        SELECT ID, "NAME_OF_NODE", "SECTOR_NO_", "BLOCK_ROAD_NAME",
+        SELECT "ID", "NAME_OF_NODE", "SECTOR_NO_", "BLOCK_ROAD_NAME",
                "PLOT_NO_", "PLOT_NO_AFTER_SURVEY"
         FROM all_data
         WHERE "NAME_OF_NODE" = $1
