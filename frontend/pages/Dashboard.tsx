@@ -299,7 +299,7 @@ export const Dashboard: React.FC = () => {
     const primaryOrder = [
       'COMMERCIAL', 
       'RESIDENTIAL', 
-      'RESIDENTIAL + COMMERCIAL', 
+      'RESIDENTIAL+COMMERCIAL', 
       'SERVICE INDUSTRY'
     ];
     
