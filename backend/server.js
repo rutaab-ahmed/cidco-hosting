@@ -262,7 +262,7 @@ app.get('/api/record/:id', async (req, res) => {
     const images = fs.existsSync(imgDir)
         ? fs.readdirSync(imgDir)
             .filter(f => /\.(jpg|png|jpeg|webp)$/i.test(f))
-            .map(f => ${BASE_URL}/uploads/images/${id}/${f})
+            .map(f => `${BASE_URL}/uploads/images/${id}/${f}`)
             // .map(f => `http://localhost:8083/uploads/images/${id}/${f}`)
         : [];
 
