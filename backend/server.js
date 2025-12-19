@@ -244,6 +244,7 @@ app.post('/api/search', async (req, res) => {
 /* ------------------------------------------------------------------
    RECORD DETAILS
 ------------------------------------------------------------------ */
+const BASE_URL = process.env.BASE_URL || 'http://localhost:9000';
 
 app.get('/api/record/:id', async (req, res) => {
     const rows = await query(
@@ -261,7 +262,8 @@ app.get('/api/record/:id', async (req, res) => {
     const images = fs.existsSync(imgDir)
         ? fs.readdirSync(imgDir)
             .filter(f => /\.(jpg|png|jpeg|webp)$/i.test(f))
-            .map(f => `http://localhost:8083/uploads/images/${id}/${f}`)
+            .map(f => ${BASE_URL}/uploads/images/${id}/${f})
+            // .map(f => `http://localhost:8083/uploads/images/${id}/${f}`)
         : [];
 
     res.json({
