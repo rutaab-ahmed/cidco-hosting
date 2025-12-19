@@ -520,9 +520,14 @@ app.put("/api/record/:id", async (req, res) => {
 
 // app.listen(8083, () =>
 //   console.log("🚀 Server running on http://localhost:8083")
-// );
+// );   || 8083
 
-const PORT = process.env.PORT || 8083;
+const PORT = process.env.PORT;
+
+app.get('/', (req, res) => {
+    res.send('CIDCO Backend is running 🚀');
+});
+
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
