@@ -244,7 +244,7 @@ app.post('/api/search', async (req, res) => {
 /* ------------------------------------------------------------------
    RECORD DETAILS
 ------------------------------------------------------------------ */
-const BASE_URL = process.env.BASE_URL || 'http://localhost:9000';
+const BASE_URL = process.env.BASE_URL || `http://localhost:9000`;
 
 app.get('/api/record/:id', async (req, res) => {
     const rows = await query(
