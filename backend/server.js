@@ -227,16 +227,16 @@ app.post('/api/search', async (req, res) => {
     const { node, sector, block, plot } = req.body;
 
     let sql = `
-        SELECT ID, NAME_OF_NODE, SECTOR_NO_, BLOCK_ROAD_NAME,
-               PLOT_NO_, PLOT_NO_AFTER_SURVEY
+        SELECT ID, "NAME_OF_NODE", "SECTOR_NO_", "BLOCK_ROAD_NAME",
+               "PLOT_NO_", "PLOT_NO_AFTER_SURVEY"
         FROM all_data
-        WHERE NAME_OF_NODE = $1
+        WHERE "NAME_OF_NODE" = $1
     `;
     const params = [node];
 
-    if (sector) sql += ` AND SECTOR_NO_ = $${params.push(sector)}`;
-    if (block)  sql += ` AND BLOCK_ROAD_NAME = $${params.push(block)}`;
-    if (plot)   sql += ` AND PLOT_NO_ = $${params.push(plot)}`;
+    if (sector) sql += ` AND "SECTOR_NO_" = $${params.push(sector)}`;
+    if (block)  sql += ` AND "BLOCK_ROAD_NAME" = $${params.push(block)}`;
+    if (plot)   sql += ` AND "PLOT_NO_" = $${params.push(plot)}`;
 
     res.json(await query(sql, params));
 });
@@ -244,7 +244,6 @@ app.post('/api/search', async (req, res) => {
 /* ------------------------------------------------------------------
    RECORD DETAILS
 ------------------------------------------------------------------ */
-const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`; 
 
 app.get('/api/record/:id', async (req, res) => {
     const rows = await query(
@@ -257,14 +256,12 @@ app.get('/api/record/:id', async (req, res) => {
 
     const record = rows[0];
     const id = String(record.ID);
-  
 
     const imgDir = path.join(UPLOADS_PATH, 'images', id);
     const images = fs.existsSync(imgDir)
         ? fs.readdirSync(imgDir)
             .filter(f => /\.(jpg|png|jpeg|webp)$/i.test(f))
-            .map(f => `${BASE_URL}/uploads/images/${id}/${f}`)
-            // .map(f => `http://localhost:8083/uploads/images/${id}/${f}`)
+            .map(f => `http://localhost:8083/uploads/images/${id}/${f}`)
         : [];
 
     res.json({
@@ -309,8 +306,8 @@ async function getSummary(req, groupByColumn) {
     `;
 
     const params = [];
-    if (node)   sql += ` AND "NAME_OF_NODE" = $${params.push(node)}`;
-    if (sector) sql += ` AND "SECTOR_NO_" = $${params.push(sector)}`;
+    if (node)   sql += ` AND ""NAME_OF_NODE"" = $${params.push(node)}`;
+    if (sector) sql += ` AND ""SECTOR_NO_"" = $${params.push(sector)}`;
 
     sql += `
         GROUP BY category
@@ -351,6 +348,89 @@ app.get('/api/summary/department', async (req, res) => {
     res.json(await getSummary(req, '"Department_Remark"'));
 });
 
+
+app.get('/api/nodes', async (req, res) => {
+    const rows = await query(`
+        SELECT DISTINCT "NAME_OF_NODE"
+        FROM all_data
+        WHERE "NAME_OF_NODE" IS NOT NULL
+        ORDER BY "NAME_OF_NODE"
+    `);
+
+    res.json(rows.map(r => r.NAME_OF_NODE));
+});
+
+
+app.get('/api/sectors', async (req, res) => {
+    const { node } = req.query;
+
+    let sql = `
+        SELECT DISTINCT "SECTOR_NO_"
+        FROM all_data
+        WHERE "SECTOR_NO_" IS NOT NULL
+    `;
+    const params = [];
+
+    if (node) {
+        sql += ` AND "NAME_OF_NODE" = $1`;
+        params.push(node);
+    }
+
+    sql += ` ORDER BY "SECTOR_NO_"`;
+
+    const rows = await query(sql, params);
+    res.json(rows.map(r => r.SECTOR_NO_));
+});
+
+app.get('/api/blocks', async (req, res) => {
+    const { node, sector } = req.query;
+
+    let sql = `
+        SELECT DISTINCT "BLOCK_ROAD_NAME"
+        FROM all_data
+        WHERE "BLOCK_ROAD_NAME" IS NOT NULL
+    `;
+    const params = [];
+
+    if (node)   sql += ` AND "NAME_OF_NODE" = $${params.push(node)}`;
+    if (sector) sql += ` AND "SECTOR_NO_" = $${params.push(sector)}`;
+
+    sql += ` ORDER BY "BLOCK_ROAD_NAME"`;
+
+    const rows = await query(sql, params);
+    res.json(rows.map(r => r.BLOCK_ROAD_NAME));
+});
+
+app.get('/api/plots', async (req, res) => {
+    const { node, sector, block } = req.query;
+
+    let sql = `
+        SELECT DISTINCT "PLOT_NO_"
+        FROM all_data
+        WHERE "PLOT_NO_" IS NOT NULL
+    `;
+    const params = [];
+
+    if (node) {
+        sql += ` AND "NAME_OF_NODE" = $${params.push(node)}`;
+    }
+
+    if (sector) {
+        sql += ` AND "SECTOR_NO_" = $${params.push(sector)}`;
+    }
+
+    if (block) {
+        sql += ` AND "BLOCK_ROAD_NAME" = $${params.push(block)}`;
+    }
+
+    sql += ` ORDER BY "PLOT_NO_"`;
+
+    const rows = await query(sql, params);
+
+    res.json(rows.map(r => r.PLOT_NO_));
+});
+
+
 /* ------------------------------------------------------------------
    SERVER
 ------------------------------------------------------------------ */
@@ -359,6 +439,7 @@ app.get('/api/summary/department', async (req, res) => {
 // app.listen(PORT, () => {
 //     console.log(`🚀 Server running on http://localhost:${PORT}`);
 // });
+
 
 const PORT = process.env.PORT;
 
@@ -370,5 +451,3 @@ app.get('/', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
-
-
