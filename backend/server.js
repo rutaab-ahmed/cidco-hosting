@@ -308,8 +308,8 @@ async function getSummary(req, groupByColumn) {
     `;
 
     const params = [];
-    if (node)   sql += ` AND ""NAME_OF_NODE"" = $${params.push(node)}`;
-    if (sector) sql += ` AND ""SECTOR_NO_"" = $${params.push(sector)}`;
+    if (node)   sql += ` AND "NAME_OF_NODE" = $${params.push(node)}`;
+    if (sector) sql += ` AND "SECTOR_NO_" = $${params.push(sector)}`;
 
     sql += `
         GROUP BY category
@@ -342,13 +342,34 @@ async function getSummary(req, groupByColumn) {
 }
 
 
+// app.get('/api/summary', async (req, res) => {
+//     res.json(await getSummary(req, '"PLOT_USE_FOR_INVOICE"'));
+// });
+
+// app.get('/api/summary/department', async (req, res) => {
+//     res.json(await getSummary(req, '"Department_Remark"'));
+// });
+
 app.get('/api/summary', async (req, res) => {
-    res.json(await getSummary(req, '"PLOT_USE_FOR_INVOICE"'));
+    try {
+        const data = await getSummary(req, '"PLOT_USE_FOR_INVOICE"');
+        res.json(data);
+    } catch (err) {
+        console.error('Summary error:', err);
+        res.status(500).json({ error: 'Failed to load summary' });
+    }
 });
 
 app.get('/api/summary/department', async (req, res) => {
-    res.json(await getSummary(req, '"Department_Remark"'));
+    try {
+        const data = await getSummary(req, '"Department_Remark"');
+        res.json(data);
+    } catch (err) {
+        console.error('Department summary error:', err);
+        res.status(500).json({ error: 'Failed to load department summary' });
+    }
 });
+
 
 
 app.get('/api/nodes', async (req, res) => {
