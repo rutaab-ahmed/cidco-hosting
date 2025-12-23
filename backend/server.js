@@ -265,76 +265,6 @@ app.get('/api/record/:id', async (req, res) => {
 
     const record = rows[0];
     const id = String(record.ID);
-    const submission = record.SUBMISSION || 'SUBMISSION-III';
-   
-
-
-    // const imgDir = path.join(UPLOADS_PATH, 'images', id);
-    // const images = fs.existsSync(imgDir)
-    //     ? fs.readdirSync(imgDir)
-    //         .filter(f => /\.(jpg|png|jpeg|webp)$/i.test(f))
-    //         .map(f => `${BASE_URL}/uploads/images/${id}/${f}`)
-    //         // .map(f => `http://localhost:8083/uploads/images/${id}/${f}`)
-    //     : [];
-
-   /* -------------------------
-     LIST IMAGES
-  ------------------------- */
-  const { data: imageFiles, error: imgErr } = await supabase
-    .storage
-    .from('uploads')
-    .list(`images/${submission}/${id}`, { limit: 100 });
-
-  if (imgErr) console.error(imgErr);
-
-  const images = await Promise.all(
-    (imageFiles || [])
-      .filter(f => /\.(jpg|png|jpeg|webp)$/i.test(f.name))
-      .map(async (file) => {
-        const { data } = await supabase
-          .storage
-          .from('uploads')
-          .createSignedUrl(
-            `images/${submission}/${id}/${file.name}`,
-            60 * 60 // 1 hour
-          );
-
-        return data?.signedUrl;
-      })
-  );
-
-  /* -------------------------
-     PDF
-  ------------------------- */
-    let pdfUrl = null;
-    const { data: pdfSigned } = await supabase
-      .storage
-      .from('uploads')
-      .createSignedUrl(
-        `pdfs/${SUBMISSION}/${id}.pdf`,
-        60 * 60
-      );
-
-    pdfUrl = pdfSigned?.signedUrl || null;
-
- //   const { data: pdfFiles, error: pdfListErr } = await supabase
- //   .storage
- //   .from('uploads')
- //   .list(`pdfs/${submission}`);
-
- // console.log('PDF FILES:', pdfFiles);
-
-
-  /* -------------------------
-     RESPONSE
-  ------------------------- */
-  res.json({
-    ...record,
-    images: images.filter(Boolean),
-    pdf: pdfUrl
-  });
-});
-
 //     res.json({
 //         ...record,
 //         images,
@@ -342,6 +272,84 @@ app.get('/api/record/:id', async (req, res) => {
 //         has_map: fs.existsSync(path.join(UPLOADS_PATH, 'maps', `${id}.pdf`))
 //     });
 // });
+  const submission =
+    record.SUBMISSION_STAGE ||
+    record.SUBMISSION ||
+    'SUBMISSION-I';
+
+/* -------------------------
+   IMAGES (Supabase)
+------------------------- */
+const { data: imageFiles, error: imgErr } = await supabase
+    .storage
+    .from('uploads')
+    .list(`images/${submission}/${id}`, { limit: 100 });
+
+if (imgErr) console.error('Image list error:', imgErr);
+
+const images = await Promise.all(
+    (imageFiles || [])
+        .filter(f => /\.(jpg|png|jpeg|webp)$/i.test(f.name))
+        .map(async (file) => {
+            const { data } = await supabase
+                .storage
+                .from('uploads')
+                .createSignedUrl(
+                    `images/${submission}/${id}/${file.name}`,
+                    60 * 60
+                );
+
+            return data?.signedUrl;
+        })
+);
+
+/* -------------------------
+   PDF (Supabase)
+------------------------- */
+let pdfUrl = null;
+
+// Try predictable name first
+const { data: pdfSigned } = await supabase
+    .storage
+    .from('uploads')
+    .createSignedUrl(
+        `pdfs/${submission}/${id}.pdf`,
+        60 * 60
+    );
+
+if (pdfSigned?.signedUrl) {
+    pdfUrl = pdfSigned.signedUrl;
+} else {
+    // fallback: list folder
+    const { data: pdfFiles } = await supabase
+        .storage
+        .from('uploads')
+        .list(`pdfs/${submission}/${id}`);
+
+    if (pdfFiles?.length) {
+        const pdfFile = pdfFiles.find(f => f.name.endsWith('.pdf'));
+        if (pdfFile) {
+            const { data } = await supabase
+                .storage
+                .from('uploads')
+                .createSignedUrl(
+                    `pdfs/${submission}/${id}/${pdfFile.name}`,
+                    60 * 60
+                );
+            pdfUrl = data?.signedUrl || null;
+        }
+    }
+}
+
+/* -------------------------
+   RESPONSE
+------------------------- */
+res.json({
+    ...record,
+    images: images.filter(Boolean),
+    pdf: pdfUrl
+});
+
 
 /* ------------------------------------------------------------------
    SUMMARY (RESTORED & POSTGRES-SAFE)
