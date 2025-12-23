@@ -10,9 +10,17 @@ import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import crypto from 'crypto';
 import pkg from 'pg';
+import { createClient } from '@supabase/supabase-js';
 
 const { Pool } = pkg;
 dotenv.config();
+
+
+
+const supabase = createClient(
+  process.env.SUPABASE_URL_DATA,
+  process.env.SUPABASE_SERVICE_ROLE_KEY // IMPORTANT: service role key (server only)
+);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -67,8 +75,8 @@ function hashPassword(password) {
     return crypto.createHash('sha256').update(password || '').digest('hex');
 }
 
-const UPLOADS_PATH = process.env.UPLOADS_PATH || path.join(__dirname, 'uploads');
-app.use('/uploads', express.static(UPLOADS_PATH));
+// const UPLOADS_PATH = process.env.UPLOADS_PATH || path.join(__dirname, 'uploads');
+// app.use('/uploads', express.static(UPLOADS_PATH));
 
 /* ------------------------------------------------------------------
    AUTH & USERS
@@ -257,22 +265,75 @@ app.get('/api/record/:id', async (req, res) => {
 
     const record = rows[0];
     const id = String(record.ID);
+    const submission = record.SUBMISSION_STAGE || 'SUBMISSION-III';
+   
 
-    const imgDir = path.join(UPLOADS_PATH, 'images', id);
-    const images = fs.existsSync(imgDir)
-        ? fs.readdirSync(imgDir)
-            .filter(f => /\.(jpg|png|jpeg|webp)$/i.test(f))
-            .map(f => `${BASE_URL}/uploads/images/${id}/${f}`)
-            // .map(f => `http://localhost:8083/uploads/images/${id}/${f}`)
-        : [];
 
-    res.json({
-        ...record,
-        images,
-        has_pdf: fs.existsSync(path.join(UPLOADS_PATH, 'pdfs', `${id}.pdf`)),
-        has_map: fs.existsSync(path.join(UPLOADS_PATH, 'maps', `${id}.pdf`))
-    });
+    // const imgDir = path.join(UPLOADS_PATH, 'images', id);
+    // const images = fs.existsSync(imgDir)
+    //     ? fs.readdirSync(imgDir)
+    //         .filter(f => /\.(jpg|png|jpeg|webp)$/i.test(f))
+    //         .map(f => `${BASE_URL}/uploads/images/${id}/${f}`)
+    //         // .map(f => `http://localhost:8083/uploads/images/${id}/${f}`)
+    //     : [];
+
+   /* -------------------------
+     LIST IMAGES
+  ------------------------- */
+  const { data: imageFiles, error: imgErr } = await supabase
+    .storage
+    .from('uploads')
+    .list(`images/${submission}/${id}`, { limit: 100 });
+
+  if (imgErr) console.error(imgErr);
+
+  const images = await Promise.all(
+    (imageFiles || [])
+      .filter(f => /\.(jpg|png|jpeg|webp)$/i.test(f.name))
+      .map(async (file) => {
+        const { data } = await supabase
+          .storage
+          .from('uploads')
+          .createSignedUrl(
+            `images/${submission}/${id}/${file.name}`,
+            60 * 60 // 1 hour
+          );
+
+        return data?.signedUrl;
+      })
+  );
+
+  /* -------------------------
+     PDF
+  ------------------------- */
+  let pdfUrl = null;
+  const { data: pdfSigned } = await supabase
+    .storage
+    .from('uploads')
+    .createSignedUrl(
+      `pdfs/${submission}/${id}.pdf`,
+      60 * 60
+    );
+
+  pdfUrl = pdfSigned?.signedUrl || null;
+
+  /* -------------------------
+     RESPONSE
+  ------------------------- */
+  res.json({
+    ...record,
+    images: images.filter(Boolean),
+    pdf: pdfUrl
+  });
 });
+
+//     res.json({
+//         ...record,
+//         images,
+//         has_pdf: fs.existsSync(path.join(UPLOADS_PATH, 'pdfs', `${id}.pdf`)),
+//         has_map: fs.existsSync(path.join(UPLOADS_PATH, 'maps', `${id}.pdf`))
+//     });
+// });
 
 /* ------------------------------------------------------------------
    SUMMARY (RESTORED & POSTGRES-SAFE)
