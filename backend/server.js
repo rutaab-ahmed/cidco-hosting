@@ -265,7 +265,7 @@ app.get('/api/record/:id', async (req, res) => {
 
     const record = rows[0];
     const id = String(record.ID);
-    const submission = record.SUBMISSION_STAGE || 'SUBMISSION-III';
+    const submission = record.SUBMISSION || 'SUBMISSION-III';
    
 
 
