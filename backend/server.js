@@ -350,6 +350,7 @@ res.json({
     pdf: pdfUrl
 });
 
+});
 
 /* ------------------------------------------------------------------
    SUMMARY (RESTORED & POSTGRES-SAFE)
