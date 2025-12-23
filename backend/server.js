@@ -252,7 +252,7 @@ app.post('/api/search', async (req, res) => {
 /* ------------------------------------------------------------------
    RECORD DETAILS
 ------------------------------------------------------------------ */
-const BASE_URL = process.env.BASE_URL || `http://localhost:9000`;
+// const BASE_URL = process.env.BASE_URL || `http://localhost:9000`;
 
 app.get('/api/record/:id', async (req, res) => {
     const rows = await query(
@@ -306,16 +306,24 @@ app.get('/api/record/:id', async (req, res) => {
   /* -------------------------
      PDF
   ------------------------- */
-  let pdfUrl = null;
-  const { data: pdfSigned } = await supabase
-    .storage
-    .from('uploads')
-    .createSignedUrl(
-      `pdfs/${submission}/${id}.pdf`,
-      60 * 60
-    );
+  // let pdfUrl = null;
+  // const { data: pdfSigned } = await supabase
+  //   .storage
+  //   .from('uploads')
+  //   .createSignedUrl(
+  //     `pdfs/${submission}/${id}.pdf`,
+  //     60 * 60
+  //   );
 
-  pdfUrl = pdfSigned?.signedUrl || null;
+  // pdfUrl = pdfSigned?.signedUrl || null;
+
+  const { data: pdfFiles, error: pdfListErr } = await supabase
+  .storage
+  .from('uploads')
+  .list(`pdfs/${submission}`);
+
+console.log('PDF FILES:', pdfFiles);
+
 
   /* -------------------------
      RESPONSE
