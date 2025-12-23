@@ -306,23 +306,23 @@ app.get('/api/record/:id', async (req, res) => {
   /* -------------------------
      PDF
   ------------------------- */
-   // let pdfUrl = null;
-   // const { data: pdfSigned } = await supabase
-   //   .storage
-   //   .from('uploads')
-   //   .createSignedUrl(
-   //     `pdfs/${submission}/${id}.pdf`,
-   //     60 * 60
-   //   );
+    let pdfUrl = null;
+    const { data: pdfSigned } = await supabase
+      .storage
+      .from('uploads')
+      .createSignedUrl(
+        `pdfs/${SUBMISSION}/${id}.pdf`,
+        60 * 60
+      );
 
-   // pdfUrl = pdfSigned?.signedUrl || null;
+    pdfUrl = pdfSigned?.signedUrl || null;
 
-   const { data: pdfFiles, error: pdfListErr } = await supabase
-   .storage
-   .from('uploads')
-   .list(`pdfs/${submission}`);
+ //   const { data: pdfFiles, error: pdfListErr } = await supabase
+ //   .storage
+ //   .from('uploads')
+ //   .list(`pdfs/${submission}`);
 
- console.log('PDF FILES:', pdfFiles);
+ // console.log('PDF FILES:', pdfFiles);
 
 
   /* -------------------------
